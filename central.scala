@@ -15,27 +15,35 @@ import scala.concurrent.ExecutionContext
 /** Maven central. */
 object Central {
 
-  /** All versions, sorted in ascending order (i.e., the last one is the most recent). */
-  def allVersions(module: Module): IO[List[Version]] =
+  // low-level cs complete
+  private def complete(input: String): IO[List[String]] =
     IO.fromFuture {
       IO {
         Complete()
           .withRepositories(Seq(Repositories.central))
-          .withInput(s"$module:")
+          .withInput(input)
           .result()
           .value(ExecutionContext.global) // Future[Complete.Result]
       }
     } .flatMap(_.results.map(_._2).toList.flatTraverse(_.map(_.toList).liftTo[IO])) // IO[List[String]]
+
+  /** All modules under `org` matching `suffix` */
+  def allModules(org: Organization, suffix: Suffix): IO[List[Module]] =
+    complete(s"${org.value}:")
+      .map(
+        _.filter(_.dropWhile(_ != '_') == suffix.value)
+        .map(ModuleName(_))
+        .map(Module(org, _))
+      )
+
+  /** All versions, sorted in ascending order (i.e., the last one is the most recent). */
+  def allVersions(module: Module): IO[List[Version]] =
+    complete(s"$module:")
       .map(_.flatMap(Version.parse).sorted) // IO[List[Version]]
 
-  /** Dependency for the latest version of `module`, if any (it's an error otherwise). */
-  def latestVersion(module: Module): IO[Dependency] =
-    allVersions(module).flatMap { vs =>
-      vs.lastOption
-        .map(v => Dependency(module, v.toString))
-        .toRight(new RuntimeException(s"Module $module has no known versions."))
-        .liftTo[IO]
-    }
+  /** Dependency for the latest version of `module`, if any. */
+  def latestVersion(module: Module): IO[Option[Dependency]] =
+    allVersions(module).map(_.lastOption.map(v => Dependency(module, v.toString)))
 
   /** Resolve things. */
   def resolve(deps: List[Dependency]): IO[Resolution] =
