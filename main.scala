@@ -23,15 +23,15 @@ import cats.effect.ExitCode
 import cats.syntax.all._
 
 object Main extends CommandIOApp(
-  name    = "librarian",
+  name    = "thingy",
   version = "0.0.1",
   header  =
      s"""|Create a dotfile with an org's current releases and interdependencies (if any). Redirect
          |to a file or pipe straight to `dot`.
          |
-         |    librarian org.tpolecat | dot -Tsvg -o stuff.svg
+         |    thingy org.tpolecat | dot -Tsvg -o stuff.svg
          |
-         |To exclude root dependencies, create ~/.librarian_excludes and list one artifact (i.e.,
+         |To exclude root dependencies, create ~/.thingy_excludes and list one artifact (i.e.,
          |woozle-core_2.13) per line.
          |""".stripMargin.trim,
 ) {
@@ -40,10 +40,10 @@ object Main extends CommandIOApp(
 
   def excludeList: IO[Set[ModuleName]] =
     IO(sys.env.get("HOME")).flatMap {
-      case None => std.Console[IO].println("Can't get $HOME, so can't find $HOME/.librarian_excludes").as(Set.empty)
+      case None => std.Console[IO].println("Can't get $HOME, so can't find $HOME/.thingy_excludes").as(Set.empty)
       case Some(p) =>
         IO.blocking {
-          Files.readAllLines(Paths.get(p, ".librarian_excludes"), UTF8).asScala.map(ModuleName(_)).toSet
+          Files.readAllLines(Paths.get(p, ".thingy_excludes"), UTF8).asScala.map(ModuleName(_)).toSet
         } .recover {
           case _: NoSuchFileException => Set.empty
         }
