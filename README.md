@@ -1,6 +1,6 @@
 # library thingy
 
-This finds the latest versions of the libraries I work on and their dependency relationships, if any, and renders the results as a `dot` file. To change this list, edit `main.scala`.
+This creates a dotfile with an org's current releases and interdependencies (if any).
 
 To make a binary do
 
