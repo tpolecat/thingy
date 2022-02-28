@@ -52,3 +52,4 @@ metals.sbt
 
 # scala-cli
 .scala/
+.scala-build/

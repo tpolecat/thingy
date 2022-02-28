@@ -1,0 +1,21 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: ['**']
+    tags: [v*]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: coursier/cache-action@v6
+      - uses: coursier/setup-action@v1.2.0-M3
+        with:
+          jvm: temurin:1.17
+          apps: scala-cli
+      - run: scala-cli compile .
